@@ -19,19 +19,9 @@ if (!fs.existsSync(UPLOAD_DIR)) {
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-// Middleware
+// Middleware - Allow all origins
 app.use(cors({
-  origin: function (origin, callback) {
-    const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:3000')
-      .split(',')
-      .map(o => o.trim());
-    // Allow requests with no origin (mobile apps, curl, etc.)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(null, true); // Allow all origins; restrict by updating FRONTEND_URL
-    }
-  },
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
