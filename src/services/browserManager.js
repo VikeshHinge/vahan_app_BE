@@ -10,13 +10,24 @@ class BrowserManager {
   }
 
   async launchBrowser() {
-    if (this.browser && this.page) {
+    // Check if browser is actually connected, not just if references exist
+    if (this.browser?.isConnected() && this.page && !this.page.isClosed()) {
       return this.page;
     }
 
+    // Clean up any stale references
+    await this.closeBrowser();
+
     this.browser = await chromium.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--single-process',
+        '--no-zygote'
+      ]
     });
     this.context = await this.browser.newContext();
     this.page = await this.context.newPage();
@@ -26,7 +37,7 @@ class BrowserManager {
   }
 
   isBrowserOpen() {
-    return this.browser !== null && this.page !== null;
+    return this.browser?.isConnected() && this.page && !this.page.isClosed();
   }
 
   async getPage() {
@@ -67,19 +78,25 @@ class BrowserManager {
   }
 
   async closeBrowser() {
-    if (this.context) {
-      await this.context.close();
+    try {
+      if (this.context) {
+        await this.context.close().catch(() => {});
+      }
+    } finally {
       this.context = null;
     }
-    if (this.browser) {
-      await this.browser.close();
+    try {
+      if (this.browser) {
+        await this.browser.close().catch(() => {});
+      }
+    } finally {
       this.browser = null;
     }
     this.page = null;
   }
 
   async ensureBrowser() {
-    if (!this.page) {
+    if (!this.isBrowserOpen()) {
       return await this.launchBrowser();
     }
     return this.page;

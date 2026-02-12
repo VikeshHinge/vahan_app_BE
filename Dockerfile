@@ -28,8 +28,8 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Install Playwright Chromium
-RUN npx playwright install chromium
+# Install Playwright Chromium with all system dependencies
+RUN npx playwright install chromium --with-deps
 
 # Copy source code
 COPY . .
